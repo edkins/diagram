@@ -12,7 +12,100 @@ td {
 input {
 	width: 60px;
 }
+svg {
+	width: 500px;
+	height: 500px;
+}
+line {
+	stroke-width: 1px;
+	stroke: black;
+}
 </style>
+<script>
+
+function read_number(player0_move, player1_move, utility_player)
+{
+	var moves0 = ['a','b'];
+	var moves1 = ['a','b'];
+	var players = ['1','2'];
+	var name = moves0[player0_move] + moves1[player1_move] + players[utility_player];
+	return parseInt(document.getElementById(name).value);
+}
+
+function corners()
+{
+	var result = [];
+	for (var p0 = 0; p0 < 2; p0++)
+	{
+		for (var p1 = 0; p1 < 2; p1++)
+		{
+			result.push( [read_number(p0,p1,0), read_number(p0,p1,1) ] );
+		}
+	}
+	return result;
+}
+
+function clear_diagram()
+{
+	var svg = document.getElementById('diagram');
+	while (svg.firstChild) {
+		svg.removeChild(svg.firstChild);
+	}
+}
+
+function x_coord(x)
+{
+	return 50 + 50 * x;
+}
+
+function y_coord(y)
+{
+	return 50 + 50 * y;
+}
+
+function circle(x, y, r)
+{
+	var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+	circle.setAttribute('cx', x_coord(x));
+	circle.setAttribute('cy', y_coord(y));
+	circle.setAttribute('r', r);
+	return circle;
+}
+
+function line(x1, y1, x2, y2)
+{
+	var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+	line.setAttribute('x1', x_coord(x1));
+	line.setAttribute('y1', y_coord(y1));
+	line.setAttribute('x2', x_coord(x2));
+	line.setAttribute('y2', y_coord(y2));
+	return line;
+}
+
+function draw_diagram()
+{
+	clear_diagram();
+	var c = corners();
+	console.log(c);
+
+	var svg = document.getElementById('diagram');
+
+	for (var i = 0; i < 4; i++)
+	{
+		var x = c[i][0];
+		var y = c[i][1];
+		svg.append(circle(x,y,5));
+	}
+
+	var x1 = c[0][0];
+	var y1 = c[0][1];
+	var x2 = c[1][0];
+	var y2 = c[1][1];
+	svg.append(line(x1,y1,x2,y2))
+}
+
+window.onload = draw_diagram;
+</script>
 	</head>
 	<body>
 		<table>
@@ -24,26 +117,27 @@ input {
 			<tr>
 				<th>Player 1: A</th>
 				<td>
-					<input type="text" autocomplete="off">
-					<input type="text" autocomplete="off">
+					<input type="text" autocomplete="off" id="aa1">
+					<input type="text" autocomplete="off" id="aa2">
 				</td>
 				<td>
-					<input type="text" autocomplete="off">
-					<input type="text" autocomplete="off">
+					<input type="text" autocomplete="off" id="ab1">
+					<input type="text" autocomplete="off" id="ab2">
 				</td>
 			</tr>
 			<tr>
 				<th>Player 1: B</th>
 				<td>
-					<input type="text" autocomplete="off">
-					<input type="text" autocomplete="off">
+					<input type="text" autocomplete="off" id="ba1">
+					<input type="text" autocomplete="off" id="ba2">
 				</td>
 				<td>
-					<input type="text" autocomplete="off">
-					<input type="text" autocomplete="off">
+					<input type="text" autocomplete="off" id="bb1">
+					<input type="text" autocomplete="off" id="bb2">
 				</td>
 			</tr>
 		</table>
+		<input type="button" onclick="draw_diagram()" value="Generate"><br>
 		<svg id="diagram">
 		</svg>
 	</body>
