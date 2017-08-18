@@ -32,6 +32,12 @@ function read_number(player0_move, player1_move, utility_player)
 	return parseInt(document.getElementById(name).value);
 }
 
+function clear_inputs()
+{
+	document.getElementById('aa1').value = '';
+	document.getElementById('ab1').value = '';
+}
+
 function corners()
 {
 	var result = [];
@@ -60,7 +66,7 @@ function x_coord(x)
 
 function y_coord(y)
 {
-	return 50 + 50 * y;
+	return 450 - 50 * y;
 }
 
 function circle(x, y, r)
@@ -101,7 +107,19 @@ function draw_diagram()
 	var y1 = c[0][1];
 	var x2 = c[1][0];
 	var y2 = c[1][1];
-	svg.append(line(x1,y1,x2,y2))
+	var x3 = c[2][0];
+	var y3 = c[2][1];
+	var x4 = c[3][0];
+	var y4 = c[3][1];
+	for (var i = 0; i <= 16; i++)
+	{
+		var j = i / 16.0;
+		var k = 1 - j;
+		svg.append(line(x1 * j + x3 * k, y1 * j + y3 * k, 
+				x2 * j + x4 * k, y2 * j + y4 * k));
+		svg.append(line(x1 * j + x2 * k, y1 * j + y2 * k,
+				x3 * j + x4 * k, y3 * j + y4 * k));
+	}
 }
 
 window.onload = draw_diagram;
@@ -117,27 +135,28 @@ window.onload = draw_diagram;
 			<tr>
 				<th>Player 1: A</th>
 				<td>
-					<input type="text" autocomplete="off" id="aa1">
-					<input type="text" autocomplete="off" id="aa2">
+					<input type="text" id="aa1">
+					<input type="text" id="aa2">
 				</td>
 				<td>
-					<input type="text" autocomplete="off" id="ab1">
-					<input type="text" autocomplete="off" id="ab2">
+					<input type="text" id="ab1">
+					<input type="text" id="ab2">
 				</td>
 			</tr>
 			<tr>
 				<th>Player 1: B</th>
 				<td>
-					<input type="text" autocomplete="off" id="ba1">
-					<input type="text" autocomplete="off" id="ba2">
+					<input type="text" id="ba1">
+					<input type="text" id="ba2">
 				</td>
 				<td>
-					<input type="text" autocomplete="off" id="bb1">
-					<input type="text" autocomplete="off" id="bb2">
+					<input type="text" id="bb1">
+					<input type="text" id="bb2">
 				</td>
 			</tr>
 		</table>
-		<input type="button" onclick="draw_diagram()" value="Generate"><br>
+		<input type="button" onclick="draw_diagram()" value="Generate">
+		<input type="button" onclick="clear_inputs()" value="Clear"><br>
 		<svg id="diagram">
 		</svg>
 	</body>
