@@ -20,6 +20,12 @@ line {
 	stroke-width: 1px;
 	stroke: black;
 }
+polygon.bg {
+	fill: #ccc;
+}
+polygon.fill {
+	fill: rgba(0,255,0,0.5);
+}
 </style>
 <script>
 
@@ -88,19 +94,72 @@ function line(x1, y1, x2, y2)
 	return line;
 }
 
+function polygon(coords, clazz)
+{
+	var str = '';
+	for (var i = 0; i < coords.length; i++)
+	{
+		str += x_coord(coords[i][0]) + ',' + y_coord(coords[i][1]) + ' ';
+	}
+	var polygon = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+	polygon.setAttribute('points', str);
+	polygon.setAttribute('class', clazz);
+	return polygon;
+}
+
+function label(x,y)
+{
+	var text_content = '{' + x + ',' + y + '}';
+	var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+	text.textContent = text_content;
+	text.setAttribute('x', x_coord(x))
+	text.setAttribute('y', y_coord(y) - 20)
+	text.setAttribute('width', 100);
+	text.setAttribute('height', 100);
+	return text;
+}
+
+function sweeper(svg)
+{
+	var self = {
+		_last: undefined,
+
+		add: function(x0, y0, x1, y1)
+		{
+			var last = self._last;
+			if (last !== undefined)
+			{
+				svg.append(polygon([
+					[x0,y0],
+					[x1,y1],
+					[last.x1,last.y1],
+					[last.x0,last.y0]
+				], 'fill'));
+			}
+			svg.append(line(x0,y0,x1,y1));
+
+			self._last = {x0:x0,y0:y0,x1:x1,y1:y1};
+		}
+	};
+	return self;
+}
+
 function draw_diagram()
 {
 	clear_diagram();
 	var c = corners();
-	console.log(c);
 
 	var svg = document.getElementById('diagram');
+
+	svg.append(polygon(c,'bg'));
 
 	for (var i = 0; i < 4; i++)
 	{
 		var x = c[i][0];
 		var y = c[i][1];
 		svg.append(circle(x,y,5));
+
+		svg.append(label(x,y));
 	}
 
 	var x1 = c[0][0];
@@ -111,14 +170,19 @@ function draw_diagram()
 	var y3 = c[2][1];
 	var x4 = c[3][0];
 	var y4 = c[3][1];
+
+	var sw0 = sweeper(svg);
+	var sw1 = sweeper(svg);
+
 	for (var i = 0; i <= 16; i++)
 	{
 		var j = i / 16.0;
 		var k = 1 - j;
-		svg.append(line(x1 * j + x3 * k, y1 * j + y3 * k, 
-				x2 * j + x4 * k, y2 * j + y4 * k));
-		svg.append(line(x1 * j + x2 * k, y1 * j + y2 * k,
-				x3 * j + x4 * k, y3 * j + y4 * k));
+
+		sw0.add(x1 * j + x3 * k, y1 * j + y3 * k, 
+			x2 * j + x4 * k, y2 * j + y4 * k);
+		sw1.add(x1 * j + x2 * k, y1 * j + y2 * k,
+			x3 * j + x4 * k, y3 * j + y4 * k);
 	}
 }
 
