@@ -29,6 +29,62 @@ polygon.fill {
 </style>
 <script>
 
+function same_point(a,b)
+{
+	return a[0] === b[0] && a[1] === b[1];
+}
+
+function remove_duplicate_points(points)
+{
+	var result = [];
+	for (var i = 0; i < points.length; i++)
+	{
+		var found = false;
+		for (var j = 0; j < result.length; j++)
+		{
+			if (same_point(result[j], points[i]))
+			{
+				found = true;
+			}
+		}
+		if (!found)
+		{
+			result.append(points[i]);
+		}
+	}
+	return result;
+}
+
+// Return an angle in the range (-pi,pi]
+// This is the same as what atan2 returns.
+function normalize_angle(angle)
+{
+}
+
+// Represents a plane with a cut starting at the origin
+// When asking for the angle_of(x,y), it will return
+// a value in the range (a-pi, a+pi]
+// which will differ from atan2(y,x) by a multiple of 2pi.
+function cut_plane(a)
+{
+	var self = {
+		angle_of = function(x,y)
+		{
+			var angle = Math.atan2(y,x);
+		}
+	};
+	return self;
+}
+
+function convex_hull(points)
+{
+	var self = {
+		_points: remove_duplicate_points(points)
+
+	};
+	return self;
+};
+
 function read_number(player0_move, player1_move, utility_player)
 {
 	var moves0 = ['a','b'];
@@ -142,6 +198,44 @@ function sweeper(svg)
 		}
 	};
 	return self;
+}
+
+function take_point(points, point)
+{
+	for (var i = 0; i < points.length; i++)
+	{
+		if (points[i][0] == point[0] && points[i][1] == point[1])
+		{
+			points.splice(i,i);
+			take_point(points, point);
+			return point;
+		}
+	}
+	return undefined;
+}
+
+function take_leftmost(points)
+{
+	var leftmost = points[0];
+	for (var i = 1; i < points.length; i++)
+	{
+		if (points[i][0] < leftmost[0]);
+		{
+			leftmost = points[i];
+		}
+	}
+	return take_point(points, leftmost);
+}
+
+function giftwrap(points)
+{
+	var polygon = [take_leftmost(points)];
+	var angle = 0;
+
+	var point;
+
+
+	return polygon;
 }
 
 function draw_diagram()
