@@ -59,6 +59,35 @@ function _cx(a,b,d)
 	return self;
 }
 
+/*
+ * Returns [bigInt numerator, bigInt denominator]
+ * where denominator >= 1 is a power of 10
+ */
+function _parse_decimal(string)
+{
+	if (/^-?[0-9]+$/.test(string))
+	{
+		return [bigInt(string),bigInt(1)]
+	}
+	else
+	{
+		var match = /^(-?)([0-9]*)\.([0-9]*)$/.exec(string);
+		if (match === undefined)
+		{
+			throw 'Cannot parse number ' + string;
+		}
+		var minus = bigInt(1);
+		if (match[1] === '-')
+		{
+			minus = bigInt(-1);
+		}
+		var intPart = match[2];
+		var decimalPart = match[3];
+		var denom = bigInt(10).pow(decimalPart.length)
+		return [bigInt(intPart).multiply(denom).add(decimalPart).multiply(minus), denom]
+	}
+}
+
 cx = {
 	zero: function()
 	{
@@ -97,7 +126,12 @@ cx = {
 		}
 		var g = bigInt.gcd(a, bigInt.gcd(b, d));
 		return _cx(a.divide(g), b.divide(g), d.divide(g));
+	},
+	parse: function(astring, bstring)
+	{
+		var a = _parse_decimal(astring);
+		var b = _parse_decimal(bstring);
+		return cx.fromInts(a[0].multiply(b[1]), b[0].multiply(a[1]), a[1].multiply(b[1]))
 	}
-
 };
 
