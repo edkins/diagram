@@ -19,7 +19,7 @@ function _array_list_builder()
 function _frozen_array_list(data)
 {
 	var self = {
-		_data: data,
+		_data: Array.from(data),
 		iterate_any_order: function( f )
 		{
 			self.iterate( f );

@@ -49,16 +49,24 @@ function most_anticlockwise( origin )
 
 function _convex_hull( points, canvas )
 {
-	point = points.min_by(leftmost);
+	first_point = points.min_by(leftmost);
 
-	point2 = points.min_by(most_anticlockwise(point));
+	current_point = first_point;
+	result = col.list();
 
-	canvas.draw_points( points, {} );
+	do
+	{
+		result.add_to_end(current_point);
+		next_point = points.min_by(most_anticlockwise(current_point));
 
-	canvas.draw_points( col.singleton(point), {r: 10});
-	canvas.draw_points( col.singleton(point2), {fill: 'red'});
+		canvas.draw_points( points, {} );
+		canvas.draw_poly_line( result.build_list(), {} );
+		canvas.draw_points( col.singleton(current_point), {r: 10});
+		canvas.draw_points( col.singleton(next_point), {fill: 'red'});
+		canvas.next_frame();
 
-	canvas.next_frame();
+		current_point = next_point;
+	} while( !current_point.equals(first_point) );
 }
 
 module.exports = _convex_hull;

@@ -250,7 +250,7 @@ function _array_list_builder()
 function _frozen_array_list(data)
 {
 	var self = {
-		_data: data,
+		_data: Array.from(data),
 		iterate_any_order: function( f )
 		{
 			self.iterate( f );
@@ -408,9 +408,19 @@ function my_scale(z)
 	return z.multiply( cx.half() );
 }
 
+var current_frame = 0;
+var record = canvas.recording()
+function gen()
+{
+	current_frame++;
+	var canv = canvas.from_svg( document.getElementById('diagram') );
+
+	record.play_frame(canv, current_frame);
+}
+
 function app_main()
 {
-	console.log(cx.parse('1.2','2.4').toString());
+	document.getElementById('gen').onclick = gen;
 //	draw_diagram();
 
 	var list = col.list()
@@ -429,8 +439,6 @@ function app_main()
 		.build_list();
 
 	var canv = canvas.from_svg( document.getElementById('diagram') );
-
-	var record = canvas.recording()
 
 	convex( list, record );
 	record.play_frame(canv, 0);
@@ -1765,7 +1773,7 @@ function _recording_canvas()
 			self._frame.push(points);
 			self._frame.push(attribs);
 		},
-		draw_poly_line: function(points) {
+		draw_poly_line: function(points,attribs) {
 			self._frame.push('draw_poly_line');
 			self._frame.push(points);
 			self._frame.push(attribs);
@@ -1786,7 +1794,7 @@ function _recording_canvas()
 				{
 					var points = self._record[i][j++];
 					var attribs = self._record[i][j++];
-					base.draw_points(points,attribs);
+					base.draw_poly_line(points,attribs);
 				}
 				else
 				{
@@ -1923,16 +1931,24 @@ function most_anticlockwise( origin )
 
 function _convex_hull( points, canvas )
 {
-	point = points.min_by(leftmost);
+	first_point = points.min_by(leftmost);
 
-	point2 = points.min_by(most_anticlockwise(point));
+	current_point = first_point;
+	result = col.list();
 
-	canvas.draw_points( points, {} );
+	do
+	{
+		result.add_to_end(current_point);
+		next_point = points.min_by(most_anticlockwise(current_point));
 
-	canvas.draw_points( col.singleton(point), {r: 10});
-	canvas.draw_points( col.singleton(point2), {fill: 'red'});
+		canvas.draw_points( points, {} );
+		canvas.draw_poly_line( result.build_list(), {} );
+		canvas.draw_points( col.singleton(current_point), {r: 10});
+		canvas.draw_points( col.singleton(next_point), {fill: 'red'});
+		canvas.next_frame();
 
-	canvas.next_frame();
+		current_point = next_point;
+	} while( !current_point.equals(first_point) );
 }
 
 module.exports = _convex_hull;

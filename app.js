@@ -8,9 +8,19 @@ function my_scale(z)
 	return z.multiply( cx.half() );
 }
 
+var current_frame = 0;
+var record = canvas.recording()
+function gen()
+{
+	current_frame++;
+	var canv = canvas.from_svg( document.getElementById('diagram') );
+
+	record.play_frame(canv, current_frame);
+}
+
 function app_main()
 {
-	console.log(cx.parse('1.2','2.4').toString());
+	document.getElementById('gen').onclick = gen;
 //	draw_diagram();
 
 	var list = col.list()
@@ -29,8 +39,6 @@ function app_main()
 		.build_list();
 
 	var canv = canvas.from_svg( document.getElementById('diagram') );
-
-	var record = canvas.recording()
 
 	convex( list, record );
 	record.play_frame(canv, 0);

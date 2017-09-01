@@ -32,7 +32,7 @@ function _recording_canvas()
 			self._frame.push(points);
 			self._frame.push(attribs);
 		},
-		draw_poly_line: function(points) {
+		draw_poly_line: function(points,attribs) {
 			self._frame.push('draw_poly_line');
 			self._frame.push(points);
 			self._frame.push(attribs);
@@ -53,7 +53,7 @@ function _recording_canvas()
 				{
 					var points = self._record[i][j++];
 					var attribs = self._record[i][j++];
-					base.draw_points(points,attribs);
+					base.draw_poly_line(points,attribs);
 				}
 				else
 				{
