@@ -60,11 +60,173 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var bigInt = __webpack_require__(3);
+
+/*
+ * Only call after normalization. Generally cx.fromInts(a,b,d) should be used.
+ */
+function _cx(a,b,d)
+{
+	if (d.lesserOrEquals(0))
+	{
+		throw '_cx: must be called with d>0';
+	}
+	var self = {
+		a: a,
+		b: b,
+		d: d,
+		equals: function(other)
+		{
+			return self.a.multiply(other.d).equals( other.a.multiply(self.d) ) &&
+				self.b.multiply(other.d).equals( other.b.multiply(self.d) );
+		},
+		toString: function()
+		{
+			return '(' + self.a + ',' + self.b + ')/' + self.d;
+		},
+		add: function(other)
+		{
+			return cx.fromInts(
+				self.a.multiply(other.d).add( other.a.multiply(self.d) ),
+				self.b.multiply(other.d).add( other.b.multiply(self.d) ),
+				self.d.multiply(other.d)
+			);
+		},
+		subtract: function(other)
+		{
+			return cx.fromInts(
+				self.a.multiply(other.d).subtract( other.a.multiply(self.d) ),
+				self.b.multiply(other.d).subtract( other.b.multiply(self.d) ),
+				self.d.multiply(other.d)
+			);
+		},
+		multiply: function(other)
+		{
+			return cx.fromInts(
+				self.a.multiply(other.a).subtract( self.b.multiply(other.b) ),
+				self.a.multiply(other.b).add( self.b.multiply(other.a) ),
+				self.d.multiply(other.d)
+			);
+		},
+		divide: function(other)
+		{
+			var ccdd = other.a.square().add( other.b.square() );
+			return cx.fromInts(
+				self.a.multiply(other.a).add( self.b.multiply(other.b) ).multiply(other.d),
+				self.b.multiply(other.a).subtract( self.a.multiply(other.b) ).multiply(other.d),
+				ccdd.multiply( self.d )
+			);
+		},
+		// Can return imprecise results if d is too large
+		float_x: function()
+		{
+			return a.toJSNumber() / d.toJSNumber();
+		},
+		float_y: function()
+		{
+			return b.toJSNumber() / d.toJSNumber();
+		},
+		real_sign: function()
+		{
+			return a.compare(0) * d.compare(0);
+		},
+		imag_sign: function()
+		{
+			return b.compare(0) * d.compare(0);
+		}
+	};
+	return self;
+}
+
+/*
+ * Returns [bigInt numerator, bigInt denominator]
+ * where denominator >= 1 is a power of 10
+ */
+function _parse_decimal(string)
+{
+	if (/^-?[0-9]+$/.test(string))
+	{
+		return [bigInt(string),bigInt(1)]
+	}
+	else
+	{
+		var match = /^(-?)([0-9]*)\.([0-9]*)$/.exec(string);
+		if (match === undefined)
+		{
+			throw 'Cannot parse number ' + string;
+		}
+		var minus = bigInt(1);
+		if (match[1] === '-')
+		{
+			minus = bigInt(-1);
+		}
+		var intPart = match[2];
+		var decimalPart = match[3];
+		var denom = bigInt(10).pow(decimalPart.length)
+		return [bigInt(intPart).multiply(denom).add(decimalPart).multiply(minus), denom]
+	}
+}
+
+cx = {
+	zero: function()
+	{
+		return cx.fromInts(0,0,1);
+	},
+	one: function()
+	{
+		return cx.fromInts(1,0,1);
+	},
+	i: function()
+	{
+		return cx.fromInts(0,1,1);
+	},
+	int: function(n)
+	{
+		return cx.fromInts(n,0,1);
+	},
+	half: function()
+	{
+		return cx.fromInts(1,0,2);
+	},
+	fromInts: function(a,b,d)
+	{
+		a = bigInt(a);
+		b = bigInt(b);
+		d = bigInt(d);
+		if (d.equals(0))
+		{
+			throw 'cxFromInts: division by zero: (' + a + ',' + b + ',0)';
+		}
+		if (d.lesser(0))
+		{
+			a = a.multiply(-1);
+			b = b.multiply(-1);
+			d = d.multiply(-1);
+		}
+		var g = bigInt.gcd(a, bigInt.gcd(b, d));
+		return _cx(a.divide(g), b.divide(g), d.divide(g));
+	},
+	parse: function(astring, bstring)
+	{
+		var a = _parse_decimal(astring);
+		var b = _parse_decimal(bstring);
+		return cx.fromInts(a[0].multiply(b[1]), b[0].multiply(a[1]), a[1].multiply(b[1]))
+	}
+};
+
+module.exports = cx;
+
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports) {
 
 
@@ -233,11 +395,11 @@ module.exports = col;
 
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var cx = __webpack_require__(2);
-var col = __webpack_require__(0);
+var cx = __webpack_require__(0);
+var col = __webpack_require__(1);
 var canvas = __webpack_require__(5);
 var convex = __webpack_require__(6);
 
@@ -252,9 +414,18 @@ function app_main()
 //	draw_diagram();
 
 	var list = col.list()
-		.add_to_end( cx.parse('100','100') )
-		.add_to_end( cx.parse('200','200') )
+		.add_to_end( cx.parse('70','20') )
+		.add_to_end( cx.parse('130','20') )
+		.add_to_end( cx.parse('50','150') )
+		.add_to_end( cx.parse('70','180') )
+		.add_to_end( cx.parse('130','180') )
+		.add_to_end( cx.parse('150','150') )
+		.add_to_end( cx.parse('20','70') )
+		.add_to_end( cx.parse('20','130') )
 		.add_to_end( cx.parse('150','50') )
+		.add_to_end( cx.parse('180','70') )
+		.add_to_end( cx.parse('180','130') )
+		.add_to_end( cx.parse('50','50') )
 		.build_list();
 
 	var canv = canvas.from_svg( document.getElementById('diagram') );
@@ -266,168 +437,6 @@ function app_main()
 }
 
 window.onload = app_main;
-
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var bigInt = __webpack_require__(3);
-
-/*
- * Only call after normalization. Generally cx.fromInts(a,b,d) should be used.
- */
-function _cx(a,b,d)
-{
-	if (d.lesserOrEquals(0))
-	{
-		throw '_cx: must be called with d>0';
-	}
-	var self = {
-		a: a,
-		b: b,
-		d: d,
-		equals: function(other)
-		{
-			return self.a.multiply(other.d).equals( other.a.multiply(self.d) ) &&
-				self.b.multiply(other.d).equals( other.b.multiply(self.d) );
-		},
-		toString: function()
-		{
-			return '(' + self.a + ',' + self.b + ')/' + self.d;
-		},
-		add: function(other)
-		{
-			return cx.fromInts(
-				self.a.multiply(other.d).add( other.a.multiply(self.d) ),
-				self.b.multiply(other.d).add( other.b.multiply(self.d) ),
-				self.d.multiply(other.d)
-			);
-		},
-		subtract: function(other)
-		{
-			return cx.fromInts(
-				self.a.multiply(other.d).subtract( other.a.multiply(self.d) ),
-				self.b.multiply(other.d).subtract( other.b.multiply(self.d) ),
-				self.d.multiply(other.d)
-			);
-		},
-		multiply: function(other)
-		{
-			return cx.fromInts(
-				self.a.multiply(other.a).subtract( self.b.multiply(other.b) ),
-				self.a.multiply(other.b).add( self.b.multiply(other.a) ),
-				self.d.multiply(other.d)
-			);
-		},
-		divide: function(other)
-		{
-			var ccdd = other.a.square().add( other.b.square() );
-			return cx.fromInts(
-				self.a.multiply(other.a).add( self.b.multiply(other.b) ).multiply(other.d),
-				self.b.multiply(other.a).subtract( self.a.multiply(other.b) ).multiply(other.d),
-				ccdd.multiply( self.d )
-			);
-		},
-		// Can return imprecise results if d is too large
-		float_x: function()
-		{
-			return a.toJSNumber() / d.toJSNumber();
-		},
-		float_y: function()
-		{
-			return b.toJSNumber() / d.toJSNumber();
-		},
-		real_sign: function()
-		{
-			return a.compare(0) * d.compare(0);
-		},
-		imag_sign: function()
-		{
-			return b.compare(0) * d.compare(0);
-		}
-	};
-	return self;
-}
-
-/*
- * Returns [bigInt numerator, bigInt denominator]
- * where denominator >= 1 is a power of 10
- */
-function _parse_decimal(string)
-{
-	if (/^-?[0-9]+$/.test(string))
-	{
-		return [bigInt(string),bigInt(1)]
-	}
-	else
-	{
-		var match = /^(-?)([0-9]*)\.([0-9]*)$/.exec(string);
-		if (match === undefined)
-		{
-			throw 'Cannot parse number ' + string;
-		}
-		var minus = bigInt(1);
-		if (match[1] === '-')
-		{
-			minus = bigInt(-1);
-		}
-		var intPart = match[2];
-		var decimalPart = match[3];
-		var denom = bigInt(10).pow(decimalPart.length)
-		return [bigInt(intPart).multiply(denom).add(decimalPart).multiply(minus), denom]
-	}
-}
-
-cx = {
-	zero: function()
-	{
-		return cx.fromInts(0,0,1);
-	},
-	one: function()
-	{
-		return cx.fromInts(1,0,1);
-	},
-	i: function()
-	{
-		return cx.fromInts(0,1,1);
-	},
-	int: function(n)
-	{
-		return cx.fromInts(n,0,1);
-	},
-	half: function()
-	{
-		return cx.fromInts(1,0,2);
-	},
-	fromInts: function(a,b,d)
-	{
-		a = bigInt(a);
-		b = bigInt(b);
-		d = bigInt(d);
-		if (d.equals(0))
-		{
-			throw 'cxFromInts: division by zero: (' + a + ',' + b + ',0)';
-		}
-		if (d.lesser(0))
-		{
-			a = a.multiply(-1);
-			b = b.multiply(-1);
-			d = d.multiply(-1);
-		}
-		var g = bigInt.gcd(a, bigInt.gcd(b, d));
-		return _cx(a.divide(g), b.divide(g), d.divide(g));
-	},
-	parse: function(astring, bstring)
-	{
-		var a = _parse_decimal(astring);
-		var b = _parse_decimal(bstring);
-		return cx.fromInts(a[0].multiply(b[1]), b[0].multiply(a[1]), a[1].multiply(b[1]))
-	}
-};
-
-module.exports = cx;
 
 
 
@@ -1863,7 +1872,8 @@ module.exports = canvas;
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var col = __webpack_require__(0);
+var col = __webpack_require__(1);
+var cx = __webpack_require__(0);
 
 // Returns -1 if a is to the left of b
 // If they have the same real component, returns -1 if a is below b
@@ -1877,13 +1887,50 @@ function leftmost( a, b )
 	return im;
 }
 
+// Given the angle between the points is less than 180 degrees,
+// return -1 if a is the anticlockwise point, and 1 if b is.
+// If they line up exactly (with an angle of 0 degrees) then
+// return -1 if a is the furthest, and 1 if b is.
+// Return 0 if the points are identical.
+// Throws error if they're placed on opposite sides of the origin
+function most_anticlockwise( origin )
+{
+	return function (a, b )
+	{
+		if (a.equals( b ))
+		{
+			return 0;
+		}
+		if (a.equals( origin ))
+		{
+			return 1;
+		}
+		if (b.equals( origin ))
+		{
+			return -1;
+		}
+
+		var z = a.subtract(origin).divide(b.subtract(origin));
+
+		if (z.imag_sign() > 0) return -1;
+		if (z.imag_sign() < 0) return 1;
+
+		if (z.real_sign() <= 0) throw ('Opposite sides of the origin:'+b.toString() + ','+origin.toString()+','+a.toString());
+
+		return -z.subtract( cx.one() ).real_sign();
+	}
+}
+
 function _convex_hull( points, canvas )
 {
 	point = points.min_by(leftmost);
 
+	point2 = points.min_by(most_anticlockwise(point));
+
 	canvas.draw_points( points, {} );
 
 	canvas.draw_points( col.singleton(point), {r: 10});
+	canvas.draw_points( col.singleton(point2), {fill: 'red'});
 
 	canvas.next_frame();
 }
