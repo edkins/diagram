@@ -55,36 +55,6 @@ function remove_duplicate_points(points)
 	return result;
 }
 
-// Return an angle in the range (-pi,pi]
-// This is the same as what atan2 returns.
-function normalize_angle(angle)
-{
-}
-
-// Represents a plane with a cut starting at the origin
-// When asking for the angle_of(x,y), it will return
-// a value in the range (a-pi, a+pi]
-// which will differ from atan2(y,x) by a multiple of 2pi.
-function cut_plane(a)
-{
-	var self = {
-		angle_of = function(x,y)
-		{
-			var angle = Math.atan2(y,x);
-		}
-	};
-	return self;
-}
-
-function convex_hull(points)
-{
-	var self = {
-		_points: remove_duplicate_points(points)
-
-	};
-	return self;
-};
-
 function read_number(player0_move, player1_move, utility_player)
 {
 	var moves0 = ['a','b'];
@@ -280,8 +250,8 @@ function draw_diagram()
 	}
 }
 
-window.onload = draw_diagram;
 </script>
+<script src="app.bundle.js"></script>
 	</head>
 	<body>
 		<table>

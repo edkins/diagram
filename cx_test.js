@@ -54,6 +54,15 @@ function _cx(a,b,d)
 				self.b.multiply(other.a).subtract( self.a.multiply(other.b) ).multiply(other.d),
 				ccdd.multiply( self.d )
 			);
+		},
+		// Can return imprecise results if d is too large
+		float_x: function()
+		{
+			return a.toJSNumber() / d.toJSNumber();
+		},
+		float_y: function()
+		{
+			return b.toJSNumber() / d.toJSNumber();
 		}
 	};
 	return self;
@@ -134,4 +143,6 @@ cx = {
 		return cx.fromInts(a[0].multiply(b[1]), b[0].multiply(a[1]), a[1].multiply(b[1]))
 	}
 };
+
+module.exports = cx;
 

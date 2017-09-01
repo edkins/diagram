@@ -41,6 +41,14 @@ function _frozen_array_set(data)
 				f(self._data[i]);
 			}
 		},
+		transform: function(f)
+		{
+			var result = col.set();
+			self.iterate_any_order( function(x) {
+				result.add_if_not_present( f(x) );
+			} );
+			return result.build_set();
+		},
 		stringify: function(separator, f)
 		{
 			var result = '';
@@ -87,6 +95,25 @@ function _frozen_array_list(data)
 {
 	var self = {
 		_data: data,
+		iterate_any_order: function( f )
+		{
+			self.iterate( f );
+		},
+		iterate: function( f )
+		{
+			for (var i = 0; i < self._data.length; i++)
+			{
+				f( self._data[i] );
+			}
+		},
+		transform: function(f)
+		{
+			var result = col.list();
+			self.iterate( function(x) {
+				result.add_to_end( f(x) );
+			} );
+			return result.build_list();
+		},
 		stringify: function(separator, f)
 		{
 			var result = '';
@@ -193,4 +220,6 @@ col = {
 		return _array_list_builder();
 	}
 };
+
+module.exports = col;
 
