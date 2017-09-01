@@ -1,79 +1,4 @@
 
-function _array_set_builder()
-{
-	var self = {
-		data: [],
-		contains: function(obj)  // requires elements to have .equals() method
-		{
-			for (var i = 0; i < self.data.length; i++)
-			{
-				if (self.data[i].equals(obj))
-				{
-					return true;
-				}
-			}
-			return false;
-		},
-		add_if_not_present: function(obj)
-		{
-			if (!self.contains(obj))
-			{
-				self.data.push(obj);
-			}
-			return self;
-		},
-		build_set: function()
-		{
-			return _frozen_array_set(self.data);
-		}
-	};
-	return self;
-}
-
-function _frozen_array_set(data)
-{
-	var self = {
-		_data: Array.from(data),
-		iterate_any_order: function(f)
-		{
-			for (var i = 0; i < self._data.length; i++)
-			{
-				f(self._data[i]);
-			}
-		},
-		transform: function(f)
-		{
-			var result = col.set();
-			self.iterate_any_order( function(x) {
-				result.add_if_not_present( f(x) );
-			} );
-			return result.build_set();
-		},
-		stringify: function(separator, f)
-		{
-			var result = '';
-			var first = true;
-			for (var i = 0; i < self._data.length; i++)
-			{
-				if (!first)
-				{
-					result += separator;
-				}
-				first = false;
-				result += f(self._data[i]);
-			}
-			return result;
-		},
-		toString: function()
-		{
-			return self.stringify( ',', function(v) {
-				return v.toString();
-			} );
-		}
-	};
-	return self;
-}
-
 function _array_list_builder()
 {
 	var self = {
@@ -113,6 +38,18 @@ function _frozen_array_list(data)
 				result.add_to_end( f(x) );
 			} );
 			return result.build_list();
+		},
+		min_by: function(comparator)
+		{
+			var result = self._data[0];
+			for (var i = 1; i < self._data.length; i++)
+			{
+				if (comparator(self._data[i], result) < 0)
+				{
+					result = self._data[i];
+				}
+			}
+			return result;
 		},
 		stringify: function(separator, f)
 		{
@@ -164,14 +101,14 @@ function _frozen_obj_named(data)
 {
 	var self = {
 		_data: data,
-		without_names_without_duplicates_as_set: function()
+		without_names_any_order_as_list: function()
 		{
-			var builder = col.set();
+			var builder = col.list();
 			for (var key in self._data)
 			{
-				builder.add_if_not_present(self._data[key]);
+				builder.add_to_end(self._data[key]);
 			}
-			return builder.build_set();
+			return builder.build_list();
 		},
 		k: function(key)
 		{
@@ -206,19 +143,20 @@ function _frozen_obj_named(data)
 	return self;
 }
 
+function _singleton(x)
+{
+	var self = {
+		_x: x,
+		iterate: function(f) { f(self._x); },
+		iterate_any_order: function(f) { f(self._x); }
+	};
+	return self;
+}
+
 col = {
-	named: function()
-	{
-		return _obj_named_builder();
-	},
-	set: function()
-	{
-		return _array_set_builder();
-	},
-	list: function()
-	{
-		return _array_list_builder();
-	}
+	named: _obj_named_builder,
+	list: _array_list_builder,
+	singleton: _singleton
 };
 
 module.exports = col;

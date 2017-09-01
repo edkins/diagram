@@ -1,6 +1,7 @@
 var cx = require('./cx_test.js');
 var col = require('./col_test.js');
 var canvas = require('./canvas.js');
+var convex = require('./convex.js');
 
 function my_scale(z)
 {
@@ -20,7 +21,10 @@ function app_main()
 
 	var canv = canvas.from_svg( document.getElementById('diagram') );
 
-	canv.draw_poly_line( list );
+	var record = canvas.recording()
+
+	convex( list, record );
+	record.play_frame(canv, 0);
 }
 
 window.onload = app_main;

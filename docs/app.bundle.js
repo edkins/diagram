@@ -60,16 +60,186 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports) {
+
+
+function _array_list_builder()
+{
+	var self = {
+		data: [],
+		add_to_end: function(value)
+		{
+			self.data.push(value);
+			return self;
+		},
+		build_list: function()
+		{
+			return _frozen_array_list(self.data);
+		}
+	};
+	return self;
+}
+
+function _frozen_array_list(data)
+{
+	var self = {
+		_data: data,
+		iterate_any_order: function( f )
+		{
+			self.iterate( f );
+		},
+		iterate: function( f )
+		{
+			for (var i = 0; i < self._data.length; i++)
+			{
+				f( self._data[i] );
+			}
+		},
+		transform: function(f)
+		{
+			var result = col.list();
+			self.iterate( function(x) {
+				result.add_to_end( f(x) );
+			} );
+			return result.build_list();
+		},
+		min_by: function(comparator)
+		{
+			var result = self._data[0];
+			for (var i = 1; i < self._data.length; i++)
+			{
+				if (comparator(self._data[i], result) < 0)
+				{
+					result = self._data[i];
+				}
+			}
+			return result;
+		},
+		stringify: function(separator, f)
+		{
+			var result = '';
+			var first = true;
+			for (var i = 0; i < self._data.length; i++)
+			{
+				if (!first)
+				{
+					result += separator;
+				}
+				first = false;
+				result += f(self._data[i]);
+			}
+			return result;
+		},
+		toString: function()
+		{
+			return self.stringify( ',', function(v) {
+				return v.toString();
+			} );
+		}
+	}
+	return self;
+}
+
+function _obj_named_builder()
+{
+	var self = {
+		data: {},
+		add_named: function(key, value)
+		{
+			if (key in self.data)
+			{
+				throw 'obj_collection.with: already contains key: ' + key;
+			}
+			self.data[key] = value;
+			return self;
+		},
+		build_named: function()
+		{
+			return _frozen_obj_named(self.data);
+		}
+	};
+	return self;
+}
+
+function _frozen_obj_named(data)
+{
+	var self = {
+		_data: data,
+		without_names_any_order_as_list: function()
+		{
+			var builder = col.list();
+			for (var key in self._data)
+			{
+				builder.add_to_end(self._data[key]);
+			}
+			return builder.build_list();
+		},
+		k: function(key)
+		{
+			if (!(key in self._data))
+			{
+				throw 'No such key: ' + k;
+			}
+			return self._data[key];
+		},
+		stringify: function(separator, f)
+		{
+			var result = '';
+			var first = true;
+			for (var key in self._data)
+			{
+				if (!first)
+				{
+					result += separator;
+				}
+				first = false;
+				result += f(key, self._data[key]);
+			}
+			return result;
+		},
+		toString: function()
+		{
+			return self.stringify( ',', function(k,v) {
+				return k + ':' + v.toString();
+			} );
+		}
+	};
+	return self;
+}
+
+function _singleton(x)
+{
+	var self = {
+		_x: x,
+		iterate: function(f) { f(self._x); },
+		iterate_any_order: function(f) { f(self._x); }
+	};
+	return self;
+}
+
+col = {
+	named: _obj_named_builder,
+	list: _array_list_builder,
+	singleton: _singleton
+};
+
+module.exports = col;
+
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var cx = __webpack_require__(1);
-var col = __webpack_require__(4);
+var cx = __webpack_require__(2);
+var col = __webpack_require__(0);
 var canvas = __webpack_require__(5);
+var convex = __webpack_require__(6);
 
 function my_scale(z)
 {
@@ -89,7 +259,10 @@ function app_main()
 
 	var canv = canvas.from_svg( document.getElementById('diagram') );
 
-	canv.draw_poly_line( list );
+	var record = canvas.recording()
+
+	convex( list, record );
+	record.play_frame(canv, 0);
 }
 
 window.onload = app_main;
@@ -97,10 +270,10 @@ window.onload = app_main;
 
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var bigInt = __webpack_require__(2);
+var bigInt = __webpack_require__(3);
 
 /*
  * Only call after normalization. Generally cx.fromInts(a,b,d) should be used.
@@ -165,6 +338,14 @@ function _cx(a,b,d)
 		float_y: function()
 		{
 			return b.toJSNumber() / d.toJSNumber();
+		},
+		real_sign: function()
+		{
+			return a.compare(0) * d.compare(0);
+		},
+		imag_sign: function()
+		{
+			return b.compare(0) * d.compare(0);
 		}
 	};
 	return self;
@@ -251,7 +432,7 @@ module.exports = cx;
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module) {var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var bigInt = (function (undefined) {
@@ -1507,10 +1688,10 @@ if ( true ) {
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)(module)))
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -1538,237 +1719,6 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-
-function _array_set_builder()
-{
-	var self = {
-		data: [],
-		contains: function(obj)  // requires elements to have .equals() method
-		{
-			for (var i = 0; i < self.data.length; i++)
-			{
-				if (self.data[i].equals(obj))
-				{
-					return true;
-				}
-			}
-			return false;
-		},
-		add_if_not_present: function(obj)
-		{
-			if (!self.contains(obj))
-			{
-				self.data.push(obj);
-			}
-			return self;
-		},
-		build_set: function()
-		{
-			return _frozen_array_set(self.data);
-		}
-	};
-	return self;
-}
-
-function _frozen_array_set(data)
-{
-	var self = {
-		_data: Array.from(data),
-		iterate_any_order: function(f)
-		{
-			for (var i = 0; i < self._data.length; i++)
-			{
-				f(self._data[i]);
-			}
-		},
-		transform: function(f)
-		{
-			var result = col.set();
-			self.iterate_any_order( function(x) {
-				result.add_if_not_present( f(x) );
-			} );
-			return result.build_set();
-		},
-		stringify: function(separator, f)
-		{
-			var result = '';
-			var first = true;
-			for (var i = 0; i < self._data.length; i++)
-			{
-				if (!first)
-				{
-					result += separator;
-				}
-				first = false;
-				result += f(self._data[i]);
-			}
-			return result;
-		},
-		toString: function()
-		{
-			return self.stringify( ',', function(v) {
-				return v.toString();
-			} );
-		}
-	};
-	return self;
-}
-
-function _array_list_builder()
-{
-	var self = {
-		data: [],
-		add_to_end: function(value)
-		{
-			self.data.push(value);
-			return self;
-		},
-		build_list: function()
-		{
-			return _frozen_array_list(self.data);
-		}
-	};
-	return self;
-}
-
-function _frozen_array_list(data)
-{
-	var self = {
-		_data: data,
-		iterate_any_order: function( f )
-		{
-			self.iterate( f );
-		},
-		iterate: function( f )
-		{
-			for (var i = 0; i < self._data.length; i++)
-			{
-				f( self._data[i] );
-			}
-		},
-		transform: function(f)
-		{
-			var result = col.list();
-			self.iterate( function(x) {
-				result.add_to_end( f(x) );
-			} );
-			return result.build_list();
-		},
-		stringify: function(separator, f)
-		{
-			var result = '';
-			var first = true;
-			for (var i = 0; i < self._data.length; i++)
-			{
-				if (!first)
-				{
-					result += separator;
-				}
-				first = false;
-				result += f(self._data[i]);
-			}
-			return result;
-		},
-		toString: function()
-		{
-			return self.stringify( ',', function(v) {
-				return v.toString();
-			} );
-		}
-	}
-	return self;
-}
-
-function _obj_named_builder()
-{
-	var self = {
-		data: {},
-		add_named: function(key, value)
-		{
-			if (key in self.data)
-			{
-				throw 'obj_collection.with: already contains key: ' + key;
-			}
-			self.data[key] = value;
-			return self;
-		},
-		build_named: function()
-		{
-			return _frozen_obj_named(self.data);
-		}
-	};
-	return self;
-}
-
-function _frozen_obj_named(data)
-{
-	var self = {
-		_data: data,
-		without_names_without_duplicates_as_set: function()
-		{
-			var builder = col.set();
-			for (var key in self._data)
-			{
-				builder.add_if_not_present(self._data[key]);
-			}
-			return builder.build_set();
-		},
-		k: function(key)
-		{
-			if (!(key in self._data))
-			{
-				throw 'No such key: ' + k;
-			}
-			return self._data[key];
-		},
-		stringify: function(separator, f)
-		{
-			var result = '';
-			var first = true;
-			for (var key in self._data)
-			{
-				if (!first)
-				{
-					result += separator;
-				}
-				first = false;
-				result += f(key, self._data[key]);
-			}
-			return result;
-		},
-		toString: function()
-		{
-			return self.stringify( ',', function(k,v) {
-				return k + ':' + v.toString();
-			} );
-		}
-	};
-	return self;
-}
-
-col = {
-	named: function()
-	{
-		return _obj_named_builder();
-	},
-	set: function()
-	{
-		return _array_set_builder();
-	},
-	list: function()
-	{
-		return _array_list_builder();
-	}
-};
-
-module.exports = col;
-
-
-
-/***/ }),
 /* 5 */
 /***/ (function(module, exports) {
 
@@ -1778,11 +1728,62 @@ function _transformed_canvas(base, transformer)
 		_base: base,
 		_f: transformer,
 		clear: base.clear,
-		draw_points: function( points ) {
-			self._base.draw_points( points.transform( self._f ) );
+		draw_points: function( points, attribs ) {
+			self._base.draw_points( points.transform( self._f ), attribs );
 		},
 		draw_poly_line: function( points ) {
-			self._base.draw_poly_line( points.transform( self._f ) );
+			self._base.draw_poly_line( points.transform( self._f ), attribs );
+		}
+	};
+	return self;
+}
+
+function _recording_canvas()
+{
+	var self = {
+		_record: [],
+		_frame: [],
+		clear_recording: function() {
+			self._record = [];
+			self._frame = [];
+		},
+		next_frame: function() {
+			self._record.push( self._frame );
+			self._frame = [];
+		},
+		draw_points: function(points,attribs) {
+			self._frame.push('draw_points');
+			self._frame.push(points);
+			self._frame.push(attribs);
+		},
+		draw_poly_line: function(points) {
+			self._frame.push('draw_poly_line');
+			self._frame.push(points);
+			self._frame.push(attribs);
+		},
+		play_frame: function(base, i) {
+			base.clear();
+			var j = 0;
+			while (j < self._record[i].length)
+			{
+				var op = self._record[i][j++];
+				if (op === 'draw_points')
+				{
+					var points = self._record[i][j++];
+					var attribs = self._record[i][j++];
+					base.draw_points(points,attribs);
+				}
+				else if (op === 'draw_poly_line')
+				{
+					var points = self._record[i][j++];
+					var attribs = self._record[i][j++];
+					base.draw_points(points,attribs);
+				}
+				else
+				{
+					throw ('Unrecognized operation:' + op);
+				}
+			}
 		}
 	};
 	return self;
@@ -1815,22 +1816,30 @@ function _svg_canvas(svg)
 			}
 
 		},
-		draw_points: function( points ) {
+		draw_points: function( points, attribs ) {
 			points.iterate_any_order( function(point) {
 				var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
 				circle.setAttribute('cx', point.float_x());
 				circle.setAttribute('cy', point.float_y());
 				circle.setAttribute('r', 2);
+				for (name in attribs)
+				{
+					circle.setAttribute(name, attribs[name]);
+				}
 				self._svg.append(circle);
 			});
 		},
-		draw_poly_line: function( points ) {
+		draw_poly_line: function( points, attribs ) {
 			points.iterate( rememberer( function(last, point) {
 				var line = document.createElementNS('http://www.w3.org/2000/svg','line');
 				line.setAttribute('x1', last.float_x());
 				line.setAttribute('y1', last.float_y());
 				line.setAttribute('x2', point.float_x());
 				line.setAttribute('y2', point.float_y());
+				for (name in attribs)
+				{
+					line.setAttribute(name, attribs[name]);
+				}
 				self._svg.append(line);
 			}));
 		},
@@ -1842,14 +1851,44 @@ function _svg_canvas(svg)
 }
 
 var canvas = {
-	from_svg: function(svg)
-	{
-		return _svg_canvas(svg);
-	}
-
+	from_svg: _svg_canvas,
+	recording: _recording_canvas
 };
 
 module.exports = canvas;
+
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var col = __webpack_require__(0);
+
+// Returns -1 if a is to the left of b
+// If they have the same real component, returns -1 if a is below b
+function leftmost( a, b )
+{
+	var z = a.subtract(b);
+	var re = z.real_sign();
+	var im = z.imag_sign();
+
+	if (re !== 0) return re;
+	return im;
+}
+
+function _convex_hull( points, canvas )
+{
+	point = points.min_by(leftmost);
+
+	canvas.draw_points( points, {} );
+
+	canvas.draw_points( col.singleton(point), {r: 10});
+
+	canvas.next_frame();
+}
+
+module.exports = _convex_hull;
 
 
 

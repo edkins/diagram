@@ -63,6 +63,14 @@ function _cx(a,b,d)
 		float_y: function()
 		{
 			return b.toJSNumber() / d.toJSNumber();
+		},
+		real_sign: function()
+		{
+			return a.compare(0) * d.compare(0);
+		},
+		imag_sign: function()
+		{
+			return b.compare(0) * d.compare(0);
 		}
 	};
 	return self;
