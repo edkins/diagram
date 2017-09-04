@@ -59,6 +59,15 @@ function _cx(a,b,d)
 		{
 			return cx.fromInts( self.a, self.b.multiply(-1), self.d );
 		},
+		interpolate: function(other, i, max)
+		{
+			var j = max - i;
+			return cx.fromInts(
+				self.a.multiply(j).add(other.a.multiply(i)),
+				self.b.multiply(j).add(other.b.multiply(i)),
+				self.d.multiply(max)
+			);
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{

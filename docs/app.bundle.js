@@ -128,6 +128,15 @@ function _cx(a,b,d)
 		{
 			return cx.fromInts( self.a, self.b.multiply(-1), self.d );
 		},
+		interpolate: function(other, i, max)
+		{
+			var j = max - i;
+			return cx.fromInts(
+				self.a.multiply(j).add(other.a.multiply(i)),
+				self.b.multiply(j).add(other.b.multiply(i)),
+				self.d.multiply(max)
+			);
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{
@@ -444,13 +453,41 @@ function my_scale(z)
 	return z.multiply( cx.int(50) ).conjugate().add(offset);
 }
 
+function draw_grid( canv, vertices )
+{
+	for (var i = 0; i <= 16; i++)
+	{
+		var z0 = vertices.k('aa').interpolate( vertices.k('ab'), i, 16 );
+		var z1 = vertices.k('ba').interpolate( vertices.k('bb'), i, 16 );
+
+		canv.draw_poly_line( col.from_array([z0, z1]) );
+	}
+}
+
+function draw_grid2( canv, vertices )
+{
+	for (var i = 0; i <= 16; i++)
+	{
+		var z0 = vertices.k('aa').interpolate( vertices.k('ba'), i, 16 );
+		var z1 = vertices.k('ab').interpolate( vertices.k('bb'), i, 16 );
+
+		canv.draw_poly_line( col.from_array([z0, z1]) );
+	}
+}
+
 function gen()
 {
-	var list = get_data().without_names_any_order_as_list();
-	var canv = get_canvas();
+	var data = get_data();
+	var list = data.without_names_any_order_as_list();
 	var hull = convex( list );
 
+	var canv = get_canvas();
+	canv.clear();
 	canv.draw_polygon( hull, {fill:'#ddd'} );
+	
+	draw_grid( canv, get_data() );
+	draw_grid2( canv, get_data() );
+
 	canv.draw_points( list );
 }
 
