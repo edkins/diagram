@@ -577,10 +577,10 @@ function compute_text_attribs( label, z, z0, z1 )
 {
 	var offset_x = 0;
 	var offset_y = 5;
-	if (z.left_of(z0)) offset_x -= 10;
-	if (z.left_of(z1)) offset_x -= 10;
-	if (z.right_of(z0)) offset_x += 10;
-	if (z.right_of(z1)) offset_x += 10;
+	if (z.left_of(z0)) offset_x -= 12;
+	if (z.left_of(z1)) offset_x -= 12;
+	if (z.right_of(z0)) offset_x += 12;
+	if (z.right_of(z1)) offset_x += 12;
 	if (z.above(z0)) offset_y -= 5;
 	if (z.above(z1)) offset_y -= 5;
 	if (z.below(z0)) offset_y += 5;
@@ -614,9 +614,28 @@ function gen()
 	draw_labels( canv, data );
 }
 
+function preset()
+{
+	var value = document.getElementById('preset').value;
+	if (value !== '')
+	{
+		var x = value.split(',');
+		document.getElementById('aax').value = x[0];
+		document.getElementById('aay').value = x[1];
+		document.getElementById('abx').value = x[2];
+		document.getElementById('aby').value = x[3];
+		document.getElementById('bax').value = x[4];
+		document.getElementById('bay').value = x[5];
+		document.getElementById('bbx').value = x[6];
+		document.getElementById('bby').value = x[7];
+		gen();
+	}
+}
+
 function app_main()
 {
 	document.getElementById('gen').onclick = gen;
+	document.getElementById('preset').onchange = preset;
 }
 
 window.onload = app_main;
