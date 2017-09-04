@@ -9,11 +9,24 @@ table {
 td {
 	border: solid black 1px;
 }
-input {
-	width: 60px;
-}
 input.button {
 	width: 200px;
+}
+span.x {
+	background: #ffc;
+}
+span.y {
+	background: #eef;
+}
+input.x {
+	width: 60px;
+	background: #ffc;
+	border: 0;
+}
+input.y {
+	width: 60px;
+	background: #eef;
+	border: 0;
 }
 svg {
 	width: 500px;
@@ -26,38 +39,38 @@ svg {
 		<table>
 			<tr>
 				<th></th>
-				<th>Player Y: A</th>
-				<th>Player Y: B</th>
+				<th><span class="y">Player Y: A</span></th>
+				<th><span class="y">Player Y: B</span></th>
 			</tr>
 			<tr>
-				<th>Player X: A</th>
+				<th><span class="x">Player X: A</span></th>
 				<td>
-					<input type="text" id="aax">
-					<input type="text" id="aay">
+					<input type="text" id="aax" class="x">
+					<input type="text" id="aay" class="y">
 				</td>
 				<td>
-					<input type="text" id="abx">
-					<input type="text" id="aby">
+					<input type="text" id="abx" class="x">
+					<input type="text" id="aby" class="y">
 				</td>
 			</tr>
 			<tr>
-				<th>Player X: B</th>
+				<th><span class="x">Player X: B</span></th>
 				<td>
-					<input type="text" id="bax">
-					<input type="text" id="bay">
+					<input type="text" id="bax" class="x">
+					<input type="text" id="bay" class="y">
 				</td>
 				<td>
-					<input type="text" id="bbx">
-					<input type="text" id="bby">
+					<input type="text" id="bbx" class="x">
+					<input type="text" id="bby" class="y">
 				</td>
 			</tr>
 		</table>
 		Preset: <select autocomplete="off" id="preset">
 			<option value="">(none)</option>
-			<option value="1,1,0,8,8,0,3,3">Prisoner's dilemma, large defection reward</option>
-			<option value="0,1,4,2,2,4,1,0">Coordination problem variant</option>
-			<option value="0,3,3,3,4,4,3,0">Stag hunt</option>
-			<option value="5,5,0,0,9,1,0,0">Ultimatum</option>
+			<option value="1,1,8,0,0,8,3,3">Prisoner's dilemma, large defection reward</option>
+			<option value="4,2,0,1,1,0,2,4">Coordination problem variant</option>
+			<option value="3,3,3,0,0,3,4,4">Stag hunt</option>
+			<option value="0,0,5,5,0,0,9,1">Ultimatum</option>
 		</select><br>
 		<input type="button" class="button" value="Generate" id="gen"><br>
 		<svg id="diagram">
