@@ -55,6 +55,10 @@ function _cx(a,b,d)
 				ccdd.multiply( self.d )
 			);
 		},
+		conjugate: function()
+		{
+			return cx.fromInts( self.a, self.b.multiply(-1), self.d );
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{
@@ -89,7 +93,7 @@ function _parse_decimal(string)
 	else
 	{
 		var match = /^(-?)([0-9]*)\.([0-9]*)$/.exec(string);
-		if (match === undefined)
+		if (match == null)
 		{
 			throw 'Cannot parse number ' + string;
 		}
@@ -149,6 +153,12 @@ cx = {
 		var a = _parse_decimal(astring);
 		var b = _parse_decimal(bstring);
 		return cx.fromInts(a[0].multiply(b[1]), b[0].multiply(a[1]), a[1].multiply(b[1]))
+	},
+	random: function(limit)
+	{
+		var a = Math.floor( Math.random() * limit );
+		var b = Math.floor( Math.random() * limit );
+		return cx.fromInts( a, b, 1 );
 	}
 };
 

@@ -59,14 +59,18 @@ function _convex_hull( points, canvas )
 		result.add_to_end(current_point);
 		next_point = points.min_by(most_anticlockwise(current_point));
 
-		canvas.draw_points( points, {} );
-		canvas.draw_poly_line( result.build_list(), {} );
-		canvas.draw_points( col.singleton(current_point), {r: 10});
-		canvas.draw_points( col.singleton(next_point), {fill: 'red'});
-		canvas.next_frame();
+		if (canvas !== undefined)
+		{
+			canvas.draw_points( points, {} );
+			canvas.draw_poly_line( result.build_list(), {} );
+			canvas.draw_points( col.singleton(current_point), {r: 10});
+			canvas.draw_points( col.singleton(next_point), {fill: 'red'});
+			canvas.next_frame();
+		}
 
 		current_point = next_point;
 	} while( !current_point.equals(first_point) );
+	return result.build_list();
 }
 
 module.exports = _convex_hull;

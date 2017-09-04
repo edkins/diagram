@@ -7,8 +7,11 @@ function _transformed_canvas(base, transformer)
 		draw_points: function( points, attribs ) {
 			self._base.draw_points( points.transform( self._f ), attribs );
 		},
-		draw_poly_line: function( points ) {
+		draw_poly_line: function( points, attribs ) {
 			self._base.draw_poly_line( points.transform( self._f ), attribs );
+		},
+		draw_polygon: function( points, attribs ) {
+			self._base.draw_polygon( points.transform( self._f ), attribs );
 		}
 	};
 	return self;
@@ -37,6 +40,11 @@ function _recording_canvas()
 			self._frame.push(points);
 			self._frame.push(attribs);
 		},
+		draw_polygon: function(points,attribs) {
+			self._frame.push('draw_polygon');
+			self._frame.push(points);
+			self._frame.push(attribs);
+		},
 		play_frame: function(base, i) {
 			base.clear();
 			var j = 0;
@@ -55,6 +63,12 @@ function _recording_canvas()
 					var attribs = self._record[i][j++];
 					base.draw_poly_line(points,attribs);
 				}
+				else if (op === 'draw_polygon')
+				{
+					var points = self._record[i][j++];
+					var attribs = self._record[i][j++];
+					base.draw_polygon(points,attribs);
+				}
 				else
 				{
 					throw ('Unrecognized operation:' + op);
@@ -64,6 +78,7 @@ function _recording_canvas()
 	};
 	return self;
 }
+
 
 function rememberer(f)
 {
@@ -80,6 +95,11 @@ function rememberer(f)
 		}
 	};
 	return self.next;
+}
+
+function z_stringify(z)
+{
+	return z.float_x() + ',' + z.float_y();
 }
 
 function _svg_canvas(svg)
@@ -118,6 +138,17 @@ function _svg_canvas(svg)
 				}
 				self._svg.append(line);
 			}));
+		},
+		draw_polygon: function( points, attribs )
+		{
+			var str = points.stringify( ' ', z_stringify );
+			var polygon = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+			polygon.setAttribute('points', str);
+			for (name in attribs)
+			{
+				polygon.setAttribute(name, attribs[name]);
+			}
+			self._svg.append(polygon);
 		},
 		transform: function( transformer) {
 			return _transformed_canvas(self, transformer);

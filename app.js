@@ -3,45 +3,40 @@ var col = require('./col_test.js');
 var canvas = require('./canvas.js');
 var convex = require('./convex.js');
 
-function my_scale(z)
+function get_canvas()
 {
-	return z.multiply( cx.half() );
+	return canvas.from_svg( document.getElementById('diagram') ).transform(my_scale);
 }
 
-var current_frame = 0;
-var record = canvas.recording()
+function get_data()
+{
+	return col.from_array( ['aa','ab','ba','bb'] )
+		.as_names( function(name) {
+			var value_x = document.getElementById(name+'x').value;
+			var value_y = document.getElementById(name+'y').value;
+			return cx.parse( value_x, value_y );
+		} );
+}
+
+function my_scale(z)
+{
+	var offset = cx.fromInts(50, 450, 1);
+	return z.multiply( cx.int(50) ).conjugate().add(offset);
+}
+
 function gen()
 {
-	current_frame++;
-	var canv = canvas.from_svg( document.getElementById('diagram') );
+	var list = get_data().without_names_any_order_as_list();
+	var canv = get_canvas();
+	var hull = convex( list );
 
-	record.play_frame(canv, current_frame);
+	canv.draw_polygon( hull, {fill:'#ddd'} );
+	canv.draw_points( list );
 }
 
 function app_main()
 {
 	document.getElementById('gen').onclick = gen;
-//	draw_diagram();
-
-	var list = col.list()
-		.add_to_end( cx.parse('70','20') )
-		.add_to_end( cx.parse('130','20') )
-		.add_to_end( cx.parse('50','150') )
-		.add_to_end( cx.parse('70','180') )
-		.add_to_end( cx.parse('130','180') )
-		.add_to_end( cx.parse('150','150') )
-		.add_to_end( cx.parse('20','70') )
-		.add_to_end( cx.parse('20','130') )
-		.add_to_end( cx.parse('150','50') )
-		.add_to_end( cx.parse('180','70') )
-		.add_to_end( cx.parse('180','130') )
-		.add_to_end( cx.parse('50','50') )
-		.build_list();
-
-	var canv = canvas.from_svg( document.getElementById('diagram') );
-
-	convex( list, record );
-	record.play_frame(canv, 0);
 }
 
 window.onload = app_main;

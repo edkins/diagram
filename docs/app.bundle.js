@@ -124,6 +124,10 @@ function _cx(a,b,d)
 				ccdd.multiply( self.d )
 			);
 		},
+		conjugate: function()
+		{
+			return cx.fromInts( self.a, self.b.multiply(-1), self.d );
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{
@@ -158,7 +162,7 @@ function _parse_decimal(string)
 	else
 	{
 		var match = /^(-?)([0-9]*)\.([0-9]*)$/.exec(string);
-		if (match === undefined)
+		if (match == null)
 		{
 			throw 'Cannot parse number ' + string;
 		}
@@ -218,6 +222,12 @@ cx = {
 		var a = _parse_decimal(astring);
 		var b = _parse_decimal(bstring);
 		return cx.fromInts(a[0].multiply(b[1]), b[0].multiply(a[1]), a[1].multiply(b[1]))
+	},
+	random: function(limit)
+	{
+		var a = Math.floor( Math.random() * limit );
+		var b = Math.floor( Math.random() * limit );
+		return cx.fromInts( a, b, 1 );
 	}
 };
 
@@ -302,6 +312,14 @@ function _frozen_array_list(data)
 			return self.stringify( ',', function(v) {
 				return v.toString();
 			} );
+		},
+		as_names: function(f)
+		{
+			var result = col.named();
+			self.iterate( function(name) {
+				result.add_named(name, f(name));
+			} );
+			return result.build_named();
 		}
 	}
 	return self;
@@ -379,7 +397,8 @@ function _singleton(x)
 	var self = {
 		_x: x,
 		iterate: function(f) { f(self._x); },
-		iterate_any_order: function(f) { f(self._x); }
+		iterate_any_order: function(f) { f(self._x); },
+		transform: function(f) { return _singleton(f(x)); }
 	};
 	return self;
 }
@@ -387,7 +406,8 @@ function _singleton(x)
 col = {
 	named: _obj_named_builder,
 	list: _array_list_builder,
-	singleton: _singleton
+	singleton: _singleton,
+	from_array: _frozen_array_list
 };
 
 module.exports = col;
@@ -403,45 +423,40 @@ var col = __webpack_require__(1);
 var canvas = __webpack_require__(5);
 var convex = __webpack_require__(6);
 
-function my_scale(z)
+function get_canvas()
 {
-	return z.multiply( cx.half() );
+	return canvas.from_svg( document.getElementById('diagram') ).transform(my_scale);
 }
 
-var current_frame = 0;
-var record = canvas.recording()
+function get_data()
+{
+	return col.from_array( ['aa','ab','ba','bb'] )
+		.as_names( function(name) {
+			var value_x = document.getElementById(name+'x').value;
+			var value_y = document.getElementById(name+'y').value;
+			return cx.parse( value_x, value_y );
+		} );
+}
+
+function my_scale(z)
+{
+	var offset = cx.fromInts(50, 450, 1);
+	return z.multiply( cx.int(50) ).conjugate().add(offset);
+}
+
 function gen()
 {
-	current_frame++;
-	var canv = canvas.from_svg( document.getElementById('diagram') );
+	var list = get_data().without_names_any_order_as_list();
+	var canv = get_canvas();
+	var hull = convex( list );
 
-	record.play_frame(canv, current_frame);
+	canv.draw_polygon( hull, {fill:'#ddd'} );
+	canv.draw_points( list );
 }
 
 function app_main()
 {
 	document.getElementById('gen').onclick = gen;
-//	draw_diagram();
-
-	var list = col.list()
-		.add_to_end( cx.parse('70','20') )
-		.add_to_end( cx.parse('130','20') )
-		.add_to_end( cx.parse('50','150') )
-		.add_to_end( cx.parse('70','180') )
-		.add_to_end( cx.parse('130','180') )
-		.add_to_end( cx.parse('150','150') )
-		.add_to_end( cx.parse('20','70') )
-		.add_to_end( cx.parse('20','130') )
-		.add_to_end( cx.parse('150','50') )
-		.add_to_end( cx.parse('180','70') )
-		.add_to_end( cx.parse('180','130') )
-		.add_to_end( cx.parse('50','50') )
-		.build_list();
-
-	var canv = canvas.from_svg( document.getElementById('diagram') );
-
-	convex( list, record );
-	record.play_frame(canv, 0);
 }
 
 window.onload = app_main;
@@ -1748,8 +1763,11 @@ function _transformed_canvas(base, transformer)
 		draw_points: function( points, attribs ) {
 			self._base.draw_points( points.transform( self._f ), attribs );
 		},
-		draw_poly_line: function( points ) {
+		draw_poly_line: function( points, attribs ) {
 			self._base.draw_poly_line( points.transform( self._f ), attribs );
+		},
+		draw_polygon: function( points, attribs ) {
+			self._base.draw_polygon( points.transform( self._f ), attribs );
 		}
 	};
 	return self;
@@ -1778,6 +1796,11 @@ function _recording_canvas()
 			self._frame.push(points);
 			self._frame.push(attribs);
 		},
+		draw_polygon: function(points,attribs) {
+			self._frame.push('draw_polygon');
+			self._frame.push(points);
+			self._frame.push(attribs);
+		},
 		play_frame: function(base, i) {
 			base.clear();
 			var j = 0;
@@ -1796,6 +1819,12 @@ function _recording_canvas()
 					var attribs = self._record[i][j++];
 					base.draw_poly_line(points,attribs);
 				}
+				else if (op === 'draw_polygon')
+				{
+					var points = self._record[i][j++];
+					var attribs = self._record[i][j++];
+					base.draw_polygon(points,attribs);
+				}
 				else
 				{
 					throw ('Unrecognized operation:' + op);
@@ -1805,6 +1834,7 @@ function _recording_canvas()
 	};
 	return self;
 }
+
 
 function rememberer(f)
 {
@@ -1821,6 +1851,11 @@ function rememberer(f)
 		}
 	};
 	return self.next;
+}
+
+function z_stringify(z)
+{
+	return z.float_x() + ',' + z.float_y();
 }
 
 function _svg_canvas(svg)
@@ -1859,6 +1894,17 @@ function _svg_canvas(svg)
 				}
 				self._svg.append(line);
 			}));
+		},
+		draw_polygon: function( points, attribs )
+		{
+			var str = points.stringify( ' ', z_stringify );
+			var polygon = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+			polygon.setAttribute('points', str);
+			for (name in attribs)
+			{
+				polygon.setAttribute(name, attribs[name]);
+			}
+			self._svg.append(polygon);
 		},
 		transform: function( transformer) {
 			return _transformed_canvas(self, transformer);
@@ -1941,14 +1987,18 @@ function _convex_hull( points, canvas )
 		result.add_to_end(current_point);
 		next_point = points.min_by(most_anticlockwise(current_point));
 
-		canvas.draw_points( points, {} );
-		canvas.draw_poly_line( result.build_list(), {} );
-		canvas.draw_points( col.singleton(current_point), {r: 10});
-		canvas.draw_points( col.singleton(next_point), {fill: 'red'});
-		canvas.next_frame();
+		if (canvas !== undefined)
+		{
+			canvas.draw_points( points, {} );
+			canvas.draw_poly_line( result.build_list(), {} );
+			canvas.draw_points( col.singleton(current_point), {r: 10});
+			canvas.draw_points( col.singleton(next_point), {fill: 'red'});
+			canvas.next_frame();
+		}
 
 		current_point = next_point;
 	} while( !current_point.equals(first_point) );
+	return result.build_list();
 }
 
 module.exports = _convex_hull;

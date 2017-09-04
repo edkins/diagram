@@ -71,6 +71,14 @@ function _frozen_array_list(data)
 			return self.stringify( ',', function(v) {
 				return v.toString();
 			} );
+		},
+		as_names: function(f)
+		{
+			var result = col.named();
+			self.iterate( function(name) {
+				result.add_named(name, f(name));
+			} );
+			return result.build_named();
 		}
 	}
 	return self;
@@ -148,7 +156,8 @@ function _singleton(x)
 	var self = {
 		_x: x,
 		iterate: function(f) { f(self._x); },
-		iterate_any_order: function(f) { f(self._x); }
+		iterate_any_order: function(f) { f(self._x); },
+		transform: function(f) { return _singleton(f(x)); }
 	};
 	return self;
 }
@@ -156,7 +165,8 @@ function _singleton(x)
 col = {
 	named: _obj_named_builder,
 	list: _array_list_builder,
-	singleton: _singleton
+	singleton: _singleton,
+	from_array: _frozen_array_list
 };
 
 module.exports = col;
