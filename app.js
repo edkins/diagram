@@ -31,7 +31,9 @@ function draw_grid( canv, vertices )
 		var z0 = vertices.k('aa').interpolate( vertices.k('ab'), i, 16 );
 		var z1 = vertices.k('ba').interpolate( vertices.k('bb'), i, 16 );
 
-		canv.draw_poly_line( col.from_array([z0, z1]) );
+		var colour = (i === 0 || i === 16) ? '#008' : 'rgba(0,0,0,0.4)';
+
+		canv.draw_poly_line( col.from_array([z0, z1]), {'stroke-width':'0.5px','stroke':colour} );
 	}
 }
 
@@ -42,7 +44,25 @@ function draw_grid2( canv, vertices )
 		var z0 = vertices.k('aa').interpolate( vertices.k('ba'), i, 16 );
 		var z1 = vertices.k('ab').interpolate( vertices.k('bb'), i, 16 );
 
-		canv.draw_poly_line( col.from_array([z0, z1]) );
+		var colour = (i === 0 || i === 16) ? '#008' : 'rgba(0,0,0,0.4)';
+
+		canv.draw_poly_line( col.from_array([z0, z1]), {'stroke-width':'0.5px','stroke':colour} );
+	}
+}
+
+function draw_shading( canv, vertices )
+{
+	var old_z0 = vertices.k('aa');
+	var old_z1 = vertices.k('ba');
+	for (var i = 1; i <= 16; i++)
+	{
+		var z0 = vertices.k('aa').interpolate( vertices.k('ab'), i, 16 );
+		var z1 = vertices.k('ba').interpolate( vertices.k('bb'), i, 16 );
+
+		canv.draw_polygon( col.from_array([old_z1, old_z0, z0, z1]), {'fill':'rgba(0,0,128,0.14)'});
+
+		old_z0 = z0;
+		old_z1 = z1;
 	}
 }
 
@@ -54,10 +74,11 @@ function gen()
 
 	var canv = get_canvas();
 	canv.clear();
-	canv.draw_polygon( hull, {fill:'#ddd'} );
+	canv.draw_polygon( hull, {fill:'#cfcfcf'} );
 	
-	draw_grid( canv, get_data() );
-	draw_grid2( canv, get_data() );
+	draw_shading( canv, data );
+	draw_grid( canv, data );
+	draw_grid2( canv, data );
 
 	canv.draw_points( list );
 }
