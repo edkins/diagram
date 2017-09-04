@@ -68,6 +68,23 @@ function _cx(a,b,d)
 				self.d.multiply(max)
 			);
 		},
+		componentwise_divide: function(other)
+		{
+			return cx.fromInts(
+				self.a.multiply( other.d ).multiply( other.b ),
+				self.b.multiply( other.d ).multiply( other.a ),
+				self.d.multiply( other.a ).multiply( other.b )
+			);
+		},
+		componentwise_max: function(other)
+		{
+			return cx.fromInts(
+				bigInt.max(self.a.multiply(other.d), other.a.multiply(self.d) ),
+				bigInt.max(self.b.multiply(other.d), other.b.multiply(self.d) ),
+				self.d.multiply(other.d)
+			);
+
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{

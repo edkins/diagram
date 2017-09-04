@@ -137,6 +137,23 @@ function _cx(a,b,d)
 				self.d.multiply(max)
 			);
 		},
+		componentwise_divide: function(other)
+		{
+			return cx.fromInts(
+				self.a.multiply( other.d ).multiply( other.b ),
+				self.b.multiply( other.d ).multiply( other.a ),
+				self.d.multiply( other.a ).multiply( other.b )
+			);
+		},
+		componentwise_max: function(other)
+		{
+			return cx.fromInts(
+				bigInt.max(self.a.multiply(other.d), other.a.multiply(self.d) ),
+				bigInt.max(self.b.multiply(other.d), other.b.multiply(self.d) ),
+				self.d.multiply(other.d)
+			);
+
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{
@@ -301,6 +318,15 @@ function _frozen_array_list(data)
 			}
 			return result;
 		},
+		aggregate: function(f)
+		{
+			var result = self._data[0];
+			for (var i = 1; i < self._data.length; i++)
+			{
+				result = f(result, self._data[i]);
+			}
+			return result;
+		},
 		stringify: function(separator, f)
 		{
 			var result = '';
@@ -432,9 +458,9 @@ var col = __webpack_require__(1);
 var canvas = __webpack_require__(5);
 var convex = __webpack_require__(6);
 
-function get_canvas()
+function get_canvas(maximums)
 {
-	return canvas.from_svg( document.getElementById('diagram') ).transform(my_scale);
+	return canvas.from_svg( document.getElementById('diagram') ).transform(my_scale(maximums));
 }
 
 function get_data()
@@ -447,10 +473,13 @@ function get_data()
 		} );
 }
 
-function my_scale(z)
+function my_scale(maximums)
 {
-	var offset = cx.fromInts(50, 450, 1);
-	return z.multiply( cx.int(50) ).conjugate().add(offset);
+	return function(z)
+	{
+		var offset = cx.fromInts(50, 450, 1);
+		return z.multiply( cx.int(400) ).componentwise_divide(maximums).conjugate().add(offset);
+	};
 }
 
 function draw_grid( canv, vertices )
@@ -495,13 +524,21 @@ function draw_shading( canv, vertices )
 	}
 }
 
+function collection_componentwise_max( collection )
+{
+	return collection.aggregate( function(a,b) {
+		return a.componentwise_max(b);
+	} );
+}
+
 function gen()
 {
 	var data = get_data();
 	var list = data.without_names_any_order_as_list();
 	var hull = convex( list );
+	var maximums = collection_componentwise_max( list );
 
-	var canv = get_canvas();
+	var canv = get_canvas(maximums);
 	canv.clear();
 	canv.draw_polygon( hull, {fill:'#cfcfcf'} );
 	

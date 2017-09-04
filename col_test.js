@@ -51,6 +51,15 @@ function _frozen_array_list(data)
 			}
 			return result;
 		},
+		aggregate: function(f)
+		{
+			var result = self._data[0];
+			for (var i = 1; i < self._data.length; i++)
+			{
+				result = f(result, self._data[i]);
+			}
+			return result;
+		},
 		stringify: function(separator, f)
 		{
 			var result = '';
