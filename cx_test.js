@@ -85,6 +85,22 @@ function _cx(a,b,d)
 			);
 
 		},
+		left_of: function(other)
+		{
+			return self.subtract(other).real_sign() < 0;
+		},
+		right_of: function(other)
+		{
+			return self.subtract(other).real_sign() > 0;
+		},
+		below: function(other)
+		{
+			return self.subtract(other).imag_sign() < 0;
+		},
+		above: function(other)
+		{
+			return self.subtract(other).imag_sign() > 0;
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{

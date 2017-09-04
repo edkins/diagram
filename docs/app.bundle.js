@@ -154,6 +154,22 @@ function _cx(a,b,d)
 			);
 
 		},
+		left_of: function(other)
+		{
+			return self.subtract(other).real_sign() < 0;
+		},
+		right_of: function(other)
+		{
+			return self.subtract(other).real_sign() > 0;
+		},
+		below: function(other)
+		{
+			return self.subtract(other).imag_sign() < 0;
+		},
+		above: function(other)
+		{
+			return self.subtract(other).imag_sign() > 0;
+		},
 		// Can return imprecise results if d is too large
 		float_x: function()
 		{
@@ -531,6 +547,53 @@ function collection_componentwise_max( collection )
 	} );
 }
 
+function draw_labels( canv, data )
+{
+	var names = ['aa','ab','bb','ba'];
+
+	var list = [];
+	var labels = [];
+
+	for (var i = 0; i < names.length; i++)
+	{
+		var name = names[i];
+		list.push( data.k(name) );
+		
+		labels.push( '{' + document.getElementById(name+'x').value + ',' + document.getElementById(name+'y').value + '}' );
+	}
+
+	for (var i = 0; i < list.length; i++)
+	{
+		canv.draw_text( list[i], compute_text_attribs(
+			labels[i],
+			list[i],
+			list[(i + 1) % list.length],
+			list[(i + list.length - 1) % list.length]
+		) );
+	}
+}
+
+function compute_text_attribs( label, z, z0, z1 )
+{
+	var offset_x = 0;
+	var offset_y = 5;
+	if (z.left_of(z0)) offset_x -= 10;
+	if (z.left_of(z1)) offset_x -= 10;
+	if (z.right_of(z0)) offset_x += 10;
+	if (z.right_of(z1)) offset_x += 10;
+	if (z.above(z0)) offset_y -= 5;
+	if (z.above(z1)) offset_y -= 5;
+	if (z.below(z0)) offset_y += 5;
+	if (z.below(z1)) offset_y += 5;
+	return {
+		text: label,
+		offset_x: offset_x,
+		offset_y: offset_y,
+		'text-anchor': 'middle',
+		'font-size': '16px'
+	};
+}
+
 function gen()
 {
 	var data = get_data();
@@ -547,6 +610,8 @@ function gen()
 	draw_grid2( canv, data );
 
 	canv.draw_points( list );
+
+	draw_labels( canv, data );
 }
 
 function app_main()
@@ -1863,6 +1928,9 @@ function _transformed_canvas(base, transformer)
 		},
 		draw_polygon: function( points, attribs ) {
 			self._base.draw_polygon( points.transform( self._f ), attribs );
+		},
+		draw_text: function( point, attribs ) {
+			self._base.draw_text( self._f(point), attribs );
 		}
 	};
 	return self;
@@ -1896,6 +1964,11 @@ function _recording_canvas()
 			self._frame.push(points);
 			self._frame.push(attribs);
 		},
+		draw_text: function(point,attribs) {
+			self._frame.push('draw_text');
+			self._frame.push(point);
+			self._frame.push(attribs);
+		},
 		play_frame: function(base, i) {
 			base.clear();
 			var j = 0;
@@ -1919,6 +1992,12 @@ function _recording_canvas()
 					var points = self._record[i][j++];
 					var attribs = self._record[i][j++];
 					base.draw_polygon(points,attribs);
+				}
+				else if (op === 'draw_text')
+				{
+					var point = self._record[i][j++];
+					var attribs = self._record[i][j++];
+					base.draw_text(point,attribs);
 				}
 				else
 				{
@@ -2000,6 +2079,21 @@ function _svg_canvas(svg)
 				polygon.setAttribute(name, attribs[name]);
 			}
 			self._svg.append(polygon);
+		},
+		draw_text: function( point, attribs )
+		{
+			var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+			text.textContent = attribs.text;
+			text.setAttribute('x', point.float_x() + attribs.offset_x);
+			text.setAttribute('y', point.float_y() + attribs.offset_y);
+			for (name in attribs)
+			{
+				if (name !== 'text' && name !== 'offset_x' && name !== 'offset_y')
+				{
+					text.setAttribute(name, attribs[name]);
+				}
+			}
+			self._svg.append(text);
 		},
 		transform: function( transformer) {
 			return _transformed_canvas(self, transformer);

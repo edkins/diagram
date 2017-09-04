@@ -12,6 +12,9 @@ function _transformed_canvas(base, transformer)
 		},
 		draw_polygon: function( points, attribs ) {
 			self._base.draw_polygon( points.transform( self._f ), attribs );
+		},
+		draw_text: function( point, attribs ) {
+			self._base.draw_text( self._f(point), attribs );
 		}
 	};
 	return self;
@@ -45,6 +48,11 @@ function _recording_canvas()
 			self._frame.push(points);
 			self._frame.push(attribs);
 		},
+		draw_text: function(point,attribs) {
+			self._frame.push('draw_text');
+			self._frame.push(point);
+			self._frame.push(attribs);
+		},
 		play_frame: function(base, i) {
 			base.clear();
 			var j = 0;
@@ -68,6 +76,12 @@ function _recording_canvas()
 					var points = self._record[i][j++];
 					var attribs = self._record[i][j++];
 					base.draw_polygon(points,attribs);
+				}
+				else if (op === 'draw_text')
+				{
+					var point = self._record[i][j++];
+					var attribs = self._record[i][j++];
+					base.draw_text(point,attribs);
 				}
 				else
 				{
@@ -149,6 +163,21 @@ function _svg_canvas(svg)
 				polygon.setAttribute(name, attribs[name]);
 			}
 			self._svg.append(polygon);
+		},
+		draw_text: function( point, attribs )
+		{
+			var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+			text.textContent = attribs.text;
+			text.setAttribute('x', point.float_x() + attribs.offset_x);
+			text.setAttribute('y', point.float_y() + attribs.offset_y);
+			for (name in attribs)
+			{
+				if (name !== 'text' && name !== 'offset_x' && name !== 'offset_y')
+				{
+					text.setAttribute(name, attribs[name]);
+				}
+			}
+			self._svg.append(text);
 		},
 		transform: function( transformer) {
 			return _transformed_canvas(self, transformer);

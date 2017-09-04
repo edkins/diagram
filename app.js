@@ -76,6 +76,53 @@ function collection_componentwise_max( collection )
 	} );
 }
 
+function draw_labels( canv, data )
+{
+	var names = ['aa','ab','bb','ba'];
+
+	var list = [];
+	var labels = [];
+
+	for (var i = 0; i < names.length; i++)
+	{
+		var name = names[i];
+		list.push( data.k(name) );
+		
+		labels.push( '{' + document.getElementById(name+'x').value + ',' + document.getElementById(name+'y').value + '}' );
+	}
+
+	for (var i = 0; i < list.length; i++)
+	{
+		canv.draw_text( list[i], compute_text_attribs(
+			labels[i],
+			list[i],
+			list[(i + 1) % list.length],
+			list[(i + list.length - 1) % list.length]
+		) );
+	}
+}
+
+function compute_text_attribs( label, z, z0, z1 )
+{
+	var offset_x = 0;
+	var offset_y = 5;
+	if (z.left_of(z0)) offset_x -= 10;
+	if (z.left_of(z1)) offset_x -= 10;
+	if (z.right_of(z0)) offset_x += 10;
+	if (z.right_of(z1)) offset_x += 10;
+	if (z.above(z0)) offset_y -= 5;
+	if (z.above(z1)) offset_y -= 5;
+	if (z.below(z0)) offset_y += 5;
+	if (z.below(z1)) offset_y += 5;
+	return {
+		text: label,
+		offset_x: offset_x,
+		offset_y: offset_y,
+		'text-anchor': 'middle',
+		'font-size': '16px'
+	};
+}
+
 function gen()
 {
 	var data = get_data();
@@ -92,6 +139,8 @@ function gen()
 	draw_grid2( canv, data );
 
 	canv.draw_points( list );
+
+	draw_labels( canv, data );
 }
 
 function app_main()
