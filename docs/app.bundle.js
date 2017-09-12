@@ -132,9 +132,9 @@ function _cx(a,b,d)
 		{
 			var j = max - i;
 			return cx.fromInts(
-				self.a.multiply(j).add(other.a.multiply(i)),
-				self.b.multiply(j).add(other.b.multiply(i)),
-				self.d.multiply(max)
+				self.a.multiply(j).multiply(other.d).add(other.a.multiply(i).multiply(self.d)),
+				self.b.multiply(j).multiply(other.d).add(other.b.multiply(i).multiply(self.d)),
+				self.d.multiply(max).multiply(other.d)
 			);
 		},
 		componentwise_divide: function(other)
